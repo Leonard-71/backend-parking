@@ -1,0 +1,109 @@
+select * from "_prisma_migrations"
+
+select * from "User"
+select * from "Subscription"
+select * from "Car"
+select * from "ParkingSpot"
+select * from "UserSubscription"
+select * from "SubscriptionLog"
+select * from "ParkingSession"
+
+
+
+Table users {
+  id String [pk]
+  email String [unique, not null]
+  password String [not null]
+  firstName String [not null]
+  lastName String [not null]
+  phone String
+  role UserRole [default: 'user']
+  createdAt Timestamp  
+  updatedAt Timestamp  
+
+  cars Car[]
+  subscriptions UserSubscription[]
+  parkingSessions ParkingSession[]
+}
+
+Table cars {
+  id String [pk]
+  licensePlate String [unique, not null]
+  brand String
+  model String
+  createdAt Timestamp  
+  updatedAt Timestamp  
+  userId String [ref: > users.id]
+ 
+  parkingSessions ParkingSession[]
+}
+
+Table subscription_types {
+  id String [pk]
+  name String [unique, not null]
+  price Decimal [not null]
+  accessType AccessType [not null]
+  entries Int [not null]
+  exits Int [not null]
+  createdAt Timestamp  
+  updatedAt Timestamp  
+ 
+  userSubscriptions UserSubscription[]
+}
+
+Table user_subscriptions {
+  id String [pk]
+  userId String [ref: > users.id]
+  subscriptionTypeId String [ref: > subscription_types.id]
+  remainingEntries Int [not null]
+  remainingExits Int [not null]
+  startDate Date [not null]
+  endDate Date [not null]
+  isActive Boolean [default: true]
+  createdAt Timestamp  
+  updatedAt Timestamp  
+ 
+  subscriptionLogs SubscriptionLog[]
+}
+
+Table parking_spots {
+  id String [pk]
+  spotNumber String [unique, not null]
+  type AccessType [not null]
+  isOccupied Boolean [default: false]
+  createdAt Timestamp  
+  updatedAt Timestamp  
+ 
+  parkingSessions ParkingSession[]
+}
+
+Table parking_sessions {
+  id String [pk]
+  userId String [ref: > users.id]
+  carId String [ref: > cars.id]
+  parkingSpotId String [ref: > parking_spots.id]
+  userSubscriptionId String [ref: > user_subscriptions.id]
+  entryTime Timestamp  
+  exitTime Timestamp
+  isActive Boolean [default: true]
+  createdAt Timestamp 
+  updatedAt Timestamp  
+}
+
+Table subscription_logs {
+  id String [pk]
+  userSubscriptionId String [ref: > user_subscriptions.id]
+  action String [not null]
+  details Json
+  createdAt Timestamp  
+}
+
+Enum AccessType {
+  INTERIOR
+  EXTERIOR
+}
+
+Enum UserRole {
+  admin
+  user
+}

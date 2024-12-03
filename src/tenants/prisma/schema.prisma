@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(uuid())
+  firstName       String            @db.VarChar(30)
+  lastName        String            @db.VarChar(30)
+  email           String            @unique @db.VarChar(60)
+  password        String
+  phone           String            @db.VarChar(20)
+  role            UserRole          @default(user)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+
+  Cars            Car[]
+  ParkingSessions ParkingSession[]
+  UserSubscriptions UserSubscription[]
+}
+
+enum UserRole {
+  admin
+  user
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  name             SubscriptionType
+  price            Decimal            @db.Decimal(10, 2)
+  accessType       AccessType
+  entries          Int
+  exits            Int
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
+
+  UserSubscriptions UserSubscription[]
+}
+
+enum AccessType {
+  outside
+  inside
+}
+
+enum SubscriptionType {
+  FREE
+  VIP1
+  VIP2
+}
+
+model Car {
+  id                     String          @id @default(uuid())
+  registrationNumber     String          @unique @db.VarChar(20)
+  brand                  String?         @db.VarChar(30)  
+  model                  String?         @db.VarChar(30)  
+  createdAt              DateTime        @default(now()) 
+  updatedAt              DateTime        @default(now()) @updatedAt  
+  userId                 String
+
+  User                   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ParkingSessions        ParkingSession[]
+}
+
+model ParkingSession {
+  id                 String        @id @default(uuid())  
+  userId             String           
+  carId              String           
+  parkingSpotId      String?       
+  userSubscriptionId String?          
+  entryTime          DateTime      @default(now()) 
+  exitTime           DateTime?     
+  isActive           Boolean       @default(true) 
+  createdAt          DateTime      @default(now()) 
+  updatedAt          DateTime      @default(now()) @updatedAt
+
+  User               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Car                Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
+  ParkingSpot        ParkingSpot?  @relation(fields: [parkingSpotId], references: [id], onDelete: SetNull)
+}
+
+model ParkingSpot {
+  id              String               @id @default(uuid())
+  spotNumber      String               @unique @db.VarChar(20)       
+  type            AccessType            
+  isOccupied      Boolean              @default(false)              
+  createdAt       DateTime             @default(now())             
+  updatedAt       DateTime             @default(now()) @updatedAt  
+
+  ParkingSessions ParkingSession[]     
+}
+
+model UserSubscription {
+  id                  String              @id @default(uuid()) 
+  userId              String                                        
+  subscriptionTypeId  String                                        
+  remainingEntries    Int                                        
+  remainingExits      Int                                        
+  startDate           DateTime                                   
+  endDate             DateTime                                   
+  isActive            Boolean             @default(true)         
+  createdAt           DateTime            @default(now())        
+  updatedAt           DateTime            @default(now()) @updatedAt 
+
+  User                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Subscription        Subscription        @relation(fields: [subscriptionTypeId], references: [id], onDelete: Cascade)
+  SubscriptionLogs    SubscriptionLog[]
+}
+
+model SubscriptionLog {
+  id                  String              @id @default(uuid())
+  userSubscriptionId  String                                        
+  action              String              @db.VarChar(255)       
+  details             String?             @db.Text               
+  createdAt           DateTime            @default(now())        
+
+  UserSubscription    UserSubscription    @relation(fields: [userSubscriptionId], references: [id], onDelete: Cascade)
+}
+
+
+
+
+
