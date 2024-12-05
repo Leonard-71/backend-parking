@@ -9,7 +9,7 @@ async function bootstrap() {
   logger.log('Starting application...');
  
   app.enableCors({
-    origin:[ 'http://localhost:3000', 'https://frontend-parking-b9lu-pr7v9sbgg-leonard-71s-projects.vercel.app'],
+    origin:[ 'http://localhost:3000', 'https://frontend-parking-b9lu-pr7v9sbgg-leonard-71s-projects.vercel.app', "http://localhost:5173"],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',  
     credentials: true, 
   });
