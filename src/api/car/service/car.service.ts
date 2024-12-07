@@ -6,7 +6,7 @@ import { UUID } from "src/api/types";
 
 @Injectable()
 export class CarService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll() {
     return this.prisma.car.findMany();
@@ -15,6 +15,7 @@ export class CarService {
   async findOne(id: UUID) {
     const car = await this.prisma.car.findUnique({
       where: { id },
+      include: { User: true }
     });
 
     if (!car) {

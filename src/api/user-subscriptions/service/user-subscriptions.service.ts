@@ -7,10 +7,36 @@ import { PrismaService } from "../../../tenants/service/tenant.service";
 import { CreateUserSubscriptionDto } from "../dto/create-user-subscription.dto";
 import { UpdateUserSubscriptionDto } from "../dto/update-user-subscription.dto";
 import { UUID } from "src/api/types";
+import { SubscriptionService } from "src/api/subscription/service/subscription.service";
 
 @Injectable()
 export class UserSubscriptionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly subscriptionService: SubscriptionService
+
+  ) { }
+
+  async create(createUserSubscriptionDto: CreateUserSubscriptionDto) { 
+    const subscriptionType = await this.subscriptionService.findOne(createUserSubscriptionDto.subscriptionTypeId);
+
+    try {
+      return await this.prisma.userSubscription.create({
+        data: {
+          userId: createUserSubscriptionDto.userId,
+          subscriptionTypeId: createUserSubscriptionDto.subscriptionTypeId,
+          remainingEntries: subscriptionType.entries,
+          remainingExits: subscriptionType.exits,
+          startDate: new Date(),
+          isActive: true,
+        },
+      });
+    } catch {
+      throw new BadRequestException(
+        "Could not create user subscription. Please check your input.",
+      );
+    }
+  }
 
   async findAll() {
     try {
@@ -23,6 +49,7 @@ export class UserSubscriptionsService {
   async findOne(id: UUID) {
     const subscription = await this.prisma.userSubscription.findUnique({
       where: { id },
+      include: { User: true }
     });
 
     if (!subscription) {
@@ -74,17 +101,6 @@ export class UserSubscriptionsService {
     }
   }
 
-  async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
-    try {
-      return await this.prisma.userSubscription.create({
-        data: createUserSubscriptionDto,
-      });
-    } catch {
-      throw new BadRequestException(
-        "Could not create user subscription. Please check your input.",
-      );
-    }
-  }
 
   async update(id: UUID, updateUserSubscriptionDto: UpdateUserSubscriptionDto) {
     const subscription = await this.prisma.userSubscription.findUnique({

@@ -14,7 +14,8 @@ async function bootstrap() {
       'https://frontend-parking-b9lu-pr7v9sbgg-leonard-71s-projects.vercel.app',
       "http://localhost:5173",
       "https://fl-parcare.netlify.app",
-      "https://67541a25c6db14dc679a4f4e--fl-parcare.netlify.app/"],
+      "https://67541a25c6db14dc679a4f4e--fl-parcare.netlify.app/",
+    "http://localhost:5175"],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

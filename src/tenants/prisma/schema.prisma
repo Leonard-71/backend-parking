@@ -100,7 +100,7 @@ model UserSubscription {
   remainingEntries    Int                                        
   remainingExits      Int                                        
   startDate           DateTime                                   
-  endDate             DateTime                                   
+  endDate             DateTime?                                   
   isActive            Boolean             @default(true)         
   createdAt           DateTime            @default(now())        
   updatedAt           DateTime            @default(now()) @updatedAt 

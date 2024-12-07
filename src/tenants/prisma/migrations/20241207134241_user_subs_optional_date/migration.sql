@@ -1,0 +1,1 @@
+ALTER TABLE "UserSubscription" ALTER COLUMN "endDate" DROP NOT NULL;

@@ -10,7 +10,7 @@ import { UUID } from "src/api/types";
 
 @Injectable()
 export class SubscriptionLogsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createSubscriptionLogDto: CreateSubscriptionLogDto) {
     try {
