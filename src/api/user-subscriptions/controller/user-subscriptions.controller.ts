@@ -11,6 +11,7 @@ import { UserSubscriptionsService } from "../service/user-subscriptions.service"
 import { CreateUserSubscriptionDto } from "../dto/create-user-subscription.dto";
 import { UpdateUserSubscriptionDto } from "../dto/update-user-subscription.dto";
 import { UUID } from "src/api/types";
+import { VerifyUserSubscriptionDto } from "../dto/verify-subscription.dto";
 
 @Controller("user-subscriptions")
 export class UserSubscriptionsController {
@@ -53,6 +54,13 @@ export class UserSubscriptionsController {
     @Body() updateUserSubscriptionDto: UpdateUserSubscriptionDto,
   ) {
     return this.userSubscriptionsService.update(id, updateUserSubscriptionDto);
+  }
+
+  @Post("/check-active")
+  checkActiveSubscription(@Body() verifyUserSubscriptionDto: VerifyUserSubscriptionDto) {
+    return this.userSubscriptionsService.checkActiveSubscription(
+      verifyUserSubscriptionDto,
+    );
   }
 
   @Delete(":id")

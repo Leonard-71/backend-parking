@@ -6,8 +6,10 @@ import {
 import { PrismaService } from "../../../tenants/service/tenant.service";
 import { CreateUserSubscriptionDto } from "../dto/create-user-subscription.dto";
 import { UpdateUserSubscriptionDto } from "../dto/update-user-subscription.dto";
+import { VerifyUserSubscriptionDto } from "../dto/verify-subscription.dto";
 import { UUID } from "src/api/types";
 import { SubscriptionService } from "src/api/subscription/service/subscription.service";
+
 
 @Injectable()
 export class UserSubscriptionsService {
@@ -17,25 +19,54 @@ export class UserSubscriptionsService {
 
   ) { }
 
-  async create(createUserSubscriptionDto: CreateUserSubscriptionDto) { 
-    const subscriptionType = await this.subscriptionService.findOne(createUserSubscriptionDto.subscriptionTypeId);
-
+  async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
+    const { userId, subscriptionTypeId } = createUserSubscriptionDto;
+   
+    const existingSubscription = await this.prisma.userSubscription.findFirst({
+      where: {
+        userId,
+        subscriptionTypeId,
+        isActive: true,  
+      },
+    });
+  
+    if (existingSubscription) {
+      throw new BadRequestException(
+        `User already has an active subscription of this type.`,
+      );
+    }
+   
+    const subscriptionType = await this.subscriptionService.findOne(subscriptionTypeId);
+   
     try {
       return await this.prisma.userSubscription.create({
         data: {
-          userId: createUserSubscriptionDto.userId,
-          subscriptionTypeId: createUserSubscriptionDto.subscriptionTypeId,
+          userId,
+          subscriptionTypeId,
           remainingEntries: subscriptionType.entries,
           remainingExits: subscriptionType.exits,
           startDate: new Date(),
           isActive: true,
         },
       });
-    } catch {
+    } catch (error) {
       throw new BadRequestException(
         "Could not create user subscription. Please check your input.",
       );
     }
+  }
+
+  async checkActiveSubscription(verifyUserSubscriptionDto: VerifyUserSubscriptionDto): Promise<boolean> {
+    const { userId, subscriptionTypeId } = verifyUserSubscriptionDto;
+    const existingSubscription = await this.prisma.userSubscription.findFirst({
+        where: {
+            userId,
+            subscriptionTypeId,
+            isActive: true, 
+        },
+    });
+
+    return !!existingSubscription; 
   }
 
   async findAll() {
@@ -100,7 +131,6 @@ export class UserSubscriptionsService {
       );
     }
   }
-
 
   async update(id: UUID, updateUserSubscriptionDto: UpdateUserSubscriptionDto) {
     const subscription = await this.prisma.userSubscription.findUnique({
