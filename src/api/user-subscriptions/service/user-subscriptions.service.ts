@@ -96,6 +96,9 @@ export class UserSubscriptionsService {
     try {
       const subscriptions = await this.prisma.userSubscription.findMany({
         where: { userId },
+        include: {
+          Subscription: true, 
+      },
       });
 
       if (!subscriptions || subscriptions.length === 0) {
@@ -104,7 +107,14 @@ export class UserSubscriptionsService {
         );
       }
 
-      return subscriptions;
+      return subscriptions.map(subscription => ({
+        id: subscription.id,
+        name: subscription.Subscription?.name,  
+        price: subscription.Subscription?.price || 0, 
+        startDate: subscription.startDate,
+        endDate: subscription.endDate,
+        isActive: subscription.isActive,
+    }));
     } catch {
       throw new BadRequestException(
         "Error retrieving subscriptions for the specified user.",
