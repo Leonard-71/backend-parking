@@ -22,6 +22,12 @@ export class CarController {
     return { cars };
   }
 
+  @Get("complet")
+  async findAllCars() {
+    const cars = await this.carService.findAllCars();
+    return { cars };
+  }
+
   @Get(":id")
   async findOne(@Param("id") id: UUID) {
     const car = await this.carService.findOne(id);
@@ -48,9 +54,16 @@ export class CarController {
     };
   }
 
-  @Delete(":id")
-  async remove(@Param("id") id: UUID) {
-    await this.carService.remove(id);
-    return { success: true, message: "Car deleted successfully" };
+  @Delete("soft/:id")
+  async softRemove(@Param("id") id: UUID) {
+    await this.carService.removeSoft(id);
+    return { success: true, message: "Car soft deleted successfully" };
   }
+
+  @Delete("hard/:id")
+  async hardRemove(@Param("id") id: UUID) {
+    await this.carService.removeHard(id);
+    return { success: true, message: "Car permanently deleted successfully" };
+  }
+
 }

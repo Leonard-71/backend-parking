@@ -8,7 +8,7 @@ import { seedParkingSession } from "./parkingsession/parkingsession.seed";
 
 async function main() {
   console.log("Starting seed...");
-
+  
   await seedUsers();
   console.log("Users seeded.");
 
@@ -29,7 +29,7 @@ async function main() {
 
   await seedParkingSession();
   console.log("Parking sessions seeded.");
-
+ 
   console.log("All seeds completed!");
 }
 

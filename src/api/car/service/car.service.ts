@@ -12,6 +12,14 @@ export class CarService {
     return this.prisma.car.findMany();
   }
 
+  async findAllCars() {
+    return this.prisma.car.findMany({
+      where: {
+        isDeleted: false,
+      },
+    });
+  }
+
   async findOne(id: UUID) {
     const car = await this.prisma.car.findUnique({
       where: { id },
@@ -46,17 +54,35 @@ export class CarService {
     });
   }
 
-  async remove(id: UUID) {
+  async removeHard(id: UUID) {
     const car = await this.prisma.car.findUnique({
       where: { id },
     });
-
+  
     if (!car) {
       throw new NotFoundException(`Car with ID ${id} not found.`);
     }
-
+  
     return this.prisma.car.delete({
       where: { id },
     });
   }
+  
+
+  async removeSoft(id: UUID) {
+    const car = await this.prisma.car.findUnique({
+      where: { id },
+    });
+  
+    if (!car) {
+      throw new NotFoundException(`Car with ID ${id} not found.`);
+    }
+  
+    return this.prisma.car.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+  }
+  
+  
 }
