@@ -5,7 +5,10 @@ import {
   Patch,
   Delete,
   Param,
-  Body, 
+  Body,
+  NotFoundException,
+  Query,
+  BadRequestException, 
 } from "@nestjs/common";
 import { CarService } from "../service/car.service";
 import { CreateCarDto } from "../dto/create-car.dto";
@@ -16,6 +19,18 @@ import { UUID } from "src/api/types";
 export class CarController {
   constructor(private readonly carService: CarService) {}
 
+
+  @Get('verify-ownership')
+  async verifyCarOwnership(
+      @Query('userId') userId: string,
+      @Query('registrationNumber') registrationNumber: string,
+  ): Promise<{ ownershipVerified: boolean }> {
+      if (!userId || !registrationNumber) {
+          throw new BadRequestException('userId and registrationNumber are required.');
+      } 
+      return await this.carService.verifyCarOwnership(userId, registrationNumber);
+  }
+  
   @Get()
   async findAll() {
     const cars = await this.carService.findAll();
@@ -59,6 +74,10 @@ export class CarController {
       car,
     };
   }
+
+
+  
+  
 
   @Delete("soft/:id")
   async softRemove(@Param("id") id: UUID) {

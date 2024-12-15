@@ -8,6 +8,24 @@ import { UUID } from "src/api/types";
 export class CarService {
   constructor(private readonly prisma: PrismaService) { }
 
+  async verifyCarOwnership(userId: string, registrationNumber: string): Promise<{ ownershipVerified: boolean }> {
+    console.log('Prisma Query:', userId, registrationNumber);
+    
+    const car = await this.prisma.car.findFirst({
+        where: {
+            userId: userId,
+            registrationNumber: registrationNumber,
+            isDeleted: false,
+        },
+    });
+
+    console.log('Car Found:', car); 
+    return {
+        ownershipVerified: !!car, 
+    };
+}
+
+
   async findAll() {
     return this.prisma.car.findMany();
   }
@@ -27,7 +45,7 @@ export class CarService {
             userId: userId,  
         },
     });
-}
+ }
 
   async findOne(id: UUID) {
     const car = await this.prisma.car.findUnique({
@@ -48,6 +66,8 @@ export class CarService {
     });
   }
 
+
+  
   async update(id: UUID, updateCarDto: UpdateCarDto) {
     const car = await this.prisma.car.findUnique({
       where: { id },
@@ -76,7 +96,6 @@ export class CarService {
       where: { id },
     });
   }
-  
 
   async removeSoft(id: UUID) {
     const car = await this.prisma.car.findUnique({
@@ -92,6 +111,5 @@ export class CarService {
       data: { isDeleted: true },
     });
   }
-  
   
 }
