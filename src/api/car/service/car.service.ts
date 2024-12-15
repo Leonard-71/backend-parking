@@ -8,8 +8,7 @@ import { UUID } from "src/api/types";
 export class CarService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async verifyCarOwnership(userId: string, registrationNumber: string): Promise<{ ownershipVerified: boolean }> {
-    console.log('Prisma Query:', userId, registrationNumber);
+  async verifyCarOwnership(userId: string, registrationNumber: string): Promise<{ ownershipVerified: boolean }> { 
     
     const car = await this.prisma.car.findFirst({
         where: {
@@ -17,9 +16,7 @@ export class CarService {
             registrationNumber: registrationNumber,
             isDeleted: false,
         },
-    });
-
-    console.log('Car Found:', car); 
+    }); 
     return {
         ownershipVerified: !!car, 
     };

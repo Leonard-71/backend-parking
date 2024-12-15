@@ -97,31 +97,40 @@ export class UserSubscriptionsService {
       const subscriptions = await this.prisma.userSubscription.findMany({
         where: { userId },
         include: {
-          Subscription: true, 
-      },
+          Subscription: true,
+        },
       });
-
+  
       if (!subscriptions || subscriptions.length === 0) {
         throw new NotFoundException(
           `No subscriptions found for user with ID "${userId}".`,
         );
       }
-
+  
       return subscriptions.map(subscription => ({
         id: subscription.id,
-        name: subscription.Subscription?.name,  
-        price: subscription.Subscription?.price || 0, 
+        userId: subscription.userId,   
+        subscriptionTypeId: subscription.subscriptionTypeId,
+        remainingEntries: subscription.remainingEntries,
+        remainingExits: subscription.remainingExits,
         startDate: subscription.startDate,
         endDate: subscription.endDate,
         isActive: subscription.isActive,
-    }));
-    } catch {
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt,
+        subscription: {
+          name: subscription.Subscription?.name || null,
+          price: subscription.Subscription?.price || 0,
+        },
+      }));
+    } catch (error) {
+      console.error("Error:", error);
       throw new BadRequestException(
         "Error retrieving subscriptions for the specified user.",
       );
     }
   }
-
+  
   async findBySubscriptionTypeId(subscriptionTypeId: UUID) {
     try {
       const subscriptions = await this.prisma.userSubscription.findMany({
