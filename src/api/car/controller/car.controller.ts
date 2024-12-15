@@ -5,8 +5,7 @@ import {
   Patch,
   Delete,
   Param,
-  Body,
-  Query,
+  Body, 
 } from "@nestjs/common";
 import { CarService } from "../service/car.service";
 import { CreateCarDto } from "../dto/create-car.dto";
