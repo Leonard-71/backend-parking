@@ -20,6 +20,15 @@ export class CarService {
     });
   }
 
+  async findAllCarsUser(userId: string) {
+    return this.prisma.car.findMany({
+        where: {
+            isDeleted: false,
+            userId: userId,  
+        },
+    });
+}
+
   async findOne(id: UUID) {
     const car = await this.prisma.car.findUnique({
       where: { id },
@@ -33,7 +42,7 @@ export class CarService {
     return car;
   }
 
-  async create(createCarDto: CreateCarDto) {
+  async create(createCarDto: CreateCarDto) { 
     return this.prisma.car.create({
       data: { ...createCarDto },
     });

@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from "@nestjs/common";
 import { CarService } from "../service/car.service";
 import { CreateCarDto } from "../dto/create-car.dto";
@@ -33,6 +34,12 @@ export class CarController {
     const car = await this.carService.findOne(id);
     return { car };
   }
+
+  @Get("user/:userId")
+  async findAllCarsUser(@Param('userId') userId: string) { 
+      return this.carService.findAllCarsUser(userId);
+  }
+  
 
   @Post()
   async create(@Body() createCarDto: CreateCarDto) {
