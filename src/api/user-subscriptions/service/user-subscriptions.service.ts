@@ -9,6 +9,7 @@ import { UpdateUserSubscriptionDto } from "../dto/update-user-subscription.dto";
 import { VerifyUserSubscriptionDto } from "../dto/verify-subscription.dto";
 import { UUID } from "src/api/types";
 import { SubscriptionService } from "src/api/subscription/service/subscription.service";
+import { Decimal } from "@prisma/client/runtime/library";
 
 
 @Injectable()
@@ -21,40 +22,55 @@ export class UserSubscriptionsService {
 
   async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
     const { userId, subscriptionTypeId } = createUserSubscriptionDto;
-   
-    const existingSubscription = await this.prisma.userSubscription.findFirst({
-      where: {
-        userId,
-        subscriptionTypeId,
-        isActive: true,  
-      },
+ 
+    const activeSubscription = await this.prisma.userSubscription.findFirst({
+        where: { userId, isActive: true },
+        include: { Subscription: true },
     });
-  
-    if (existingSubscription) {
-      throw new BadRequestException(
-        `User already has an active subscription of this type.`,
-      );
+ 
+    const newSubscriptionType = await this.subscriptionService.findOne(subscriptionTypeId);
+
+    if (!newSubscriptionType) {
+        throw new BadRequestException("The new subscription type is invalid.");
     }
-   
-    const subscriptionType = await this.subscriptionService.findOne(subscriptionTypeId);
-   
+
+    let adjustedPrice = new Decimal(newSubscriptionType.price);  
+
+    if (activeSubscription) { 
+        const remainingValue = new Decimal(activeSubscription.remainingEntries)
+            .div(new Decimal(activeSubscription.Subscription.entries))
+            .mul(new Decimal(activeSubscription.Subscription.price));
+ 
+            adjustedPrice = Decimal.max(new Decimal(newSubscriptionType.price).sub(remainingValue), new Decimal(0));
+
+ 
+        await this.prisma.userSubscription.update({
+            where: { id: activeSubscription.id },
+            data: {
+                isActive: false,
+                endDate: new Date(),
+            },
+        });
+    }
+ 
     try {
-      return await this.prisma.userSubscription.create({
-        data: {
-          userId,
-          subscriptionTypeId,
-          remainingEntries: subscriptionType.entries,
-          remainingExits: subscriptionType.exits,
-          startDate: new Date(),
-          isActive: true,
-        },
-      });
+        return await this.prisma.userSubscription.create({
+            data: {
+                userId,
+                subscriptionTypeId,
+                remainingEntries: newSubscriptionType.entries,
+                remainingExits: newSubscriptionType.exits,
+                startDate: new Date(),
+                isActive: true,
+                pricePaid: adjustedPrice,  
+            },
+        });
     } catch (error) {
-      throw new BadRequestException(
-        "Could not create user subscription. Please check your input.",
-      );
+        throw new BadRequestException(
+            "Could not create user subscription. Please check your input.",
+        );
     }
-  }
+} 
 
   async checkActiveSubscription(verifyUserSubscriptionDto: VerifyUserSubscriptionDto): Promise<boolean> {
     const { userId, subscriptionTypeId } = verifyUserSubscriptionDto;
@@ -99,6 +115,9 @@ export class UserSubscriptionsService {
         include: {
           Subscription: true,
         },
+        orderBy: {
+          createdAt: 'desc',  
+        },
       });
   
       if (!subscriptions || subscriptions.length === 0) {
@@ -113,6 +132,7 @@ export class UserSubscriptionsService {
         subscriptionTypeId: subscription.subscriptionTypeId,
         remainingEntries: subscription.remainingEntries,
         remainingExits: subscription.remainingExits,
+        pricePaid: subscription.pricePaid,
         startDate: subscription.startDate,
         endDate: subscription.endDate,
         isActive: subscription.isActive,
@@ -258,6 +278,32 @@ export class UserSubscriptionsService {
       },
     });
   }
+
+  async calculatePriceDifference(userId: UUID, subscriptionTypeId: UUID): Promise<Decimal> {
+    const activeSubscription = await this.prisma.userSubscription.findFirst({
+        where: { userId, isActive: true },
+        include: { Subscription: true },
+    });
+
+    const newSubscriptionType = await this.subscriptionService.findOne(subscriptionTypeId);
+
+    if (!newSubscriptionType) {
+        throw new BadRequestException("The new subscription type is invalid.");
+    }
+
+    let adjustedPrice = new Decimal(newSubscriptionType.price);
+
+    if (activeSubscription) {
+        const remainingValue = new Decimal(activeSubscription.remainingEntries)
+            .div(new Decimal(activeSubscription.Subscription.entries))
+            .mul(new Decimal(activeSubscription.Subscription.price));
+
+        adjustedPrice = Decimal.max(new Decimal(newSubscriptionType.price).sub(remainingValue), new Decimal(0));
+    }
+
+    return adjustedPrice;
+}
+
   
   
   

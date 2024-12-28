@@ -105,6 +105,7 @@ model UserSubscription {
   isActive            Boolean             @default(true)         
   createdAt           DateTime            @default(now())        
   updatedAt           DateTime            @default(now()) @updatedAt 
+  pricePaid           Decimal             @default(0)
 
   User                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   Subscription        Subscription        @relation(fields: [subscriptionTypeId], references: [id], onDelete: Cascade)

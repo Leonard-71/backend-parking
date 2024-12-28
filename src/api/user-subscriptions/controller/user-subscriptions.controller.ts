@@ -12,6 +12,7 @@ import { CreateUserSubscriptionDto } from "../dto/create-user-subscription.dto";
 import { UpdateUserSubscriptionDto } from "../dto/update-user-subscription.dto";
 import { UUID } from "src/api/types";
 import { VerifyUserSubscriptionDto } from "../dto/verify-subscription.dto";
+import { Decimal } from "@prisma/client/runtime/library";
 
 @Controller("user-subscriptions")
 export class UserSubscriptionsController {
@@ -78,6 +79,16 @@ export class UserSubscriptionsController {
   cancelSubscription(@Param("userId") userId: UUID) {
     return this.userSubscriptionsService.remove(userId);
   }
+
+  @Post("/calculate-price")
+async calculatePrice(
+    @Body() createUserSubscriptionDto: CreateUserSubscriptionDto,
+): Promise<{ adjustedPrice: Decimal }> {
+    const { userId, subscriptionTypeId } = createUserSubscriptionDto;
+    const adjustedPrice = await this.userSubscriptionsService.calculatePriceDifference(userId, subscriptionTypeId);
+    return { adjustedPrice };
+}
+
 
   @Delete(":id")
   remove(@Param("id") id: UUID) {
