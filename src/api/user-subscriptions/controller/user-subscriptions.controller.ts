@@ -57,10 +57,26 @@ export class UserSubscriptionsController {
   }
 
   @Post("/check-active")
-  checkActiveSubscription(@Body() verifyUserSubscriptionDto: VerifyUserSubscriptionDto) {
+  checkActiveSubscription(
+    @Body() verifyUserSubscriptionDto: VerifyUserSubscriptionDto,
+  ) {
     return this.userSubscriptionsService.checkActiveSubscription(
       verifyUserSubscriptionDto,
     );
+  }
+
+  @Patch('/upgrade/:userId/:newSubscriptionTypeId')
+  upgradeSubscription(
+    @Param('userId') userId: UUID,
+    @Param('newSubscriptionTypeId') newSubscriptionTypeId: UUID,
+  ) {
+    return this.userSubscriptionsService.upgradeSubscription(userId, newSubscriptionTypeId);
+  }
+  
+
+  @Patch("/cancel/:userId")
+  cancelSubscription(@Param("userId") userId: UUID) {
+    return this.userSubscriptionsService.remove(userId);
   }
 
   @Delete(":id")

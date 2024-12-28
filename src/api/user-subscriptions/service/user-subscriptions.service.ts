@@ -195,4 +195,70 @@ export class UserSubscriptionsService {
       );
     }
   }
+
+  async upgradeSubscription(
+    userId: UUID,
+    newSubscriptionTypeId: UUID,
+  ): Promise<any> {
+    const activeSubscription = await this.prisma.userSubscription.findFirst({
+      where: { userId, isActive: true },
+      include: { Subscription: true },
+    });
+  
+    if (!activeSubscription) {
+      throw new BadRequestException("User does not have an active subscription.");
+    }
+  
+    const newSubscription = await this.prisma.subscription.findUnique({
+      where: { id: newSubscriptionTypeId },
+    });
+  
+    if (!newSubscription) {
+      throw new BadRequestException("The new subscription type is invalid.");
+    }
+  
+    if (activeSubscription.subscriptionTypeId === newSubscriptionTypeId) {
+      throw new BadRequestException(
+        "You are already subscribed to this plan.",
+      );
+    }
+  
+    if (Number(newSubscription.price) < Number(activeSubscription.Subscription.price)) {
+      throw new BadRequestException("Downgrade is not allowed.");
+    }
+  
+    const remainingValue =
+      (activeSubscription.remainingEntries / activeSubscription.Subscription.entries) *
+      Number(activeSubscription.Subscription.price);
+  
+    const newPrice = Number(newSubscription.price) - remainingValue;
+  
+    if (newPrice < 0) {
+      throw new BadRequestException(
+        "The new subscription price cannot be less than the remaining value of the current subscription.",
+      );
+    }
+   
+    await this.prisma.userSubscription.update({
+      where: { id: activeSubscription.id },
+      data: {
+        isActive: false,
+        endDate: new Date(),  
+      },
+    });
+   
+    return await this.prisma.userSubscription.create({
+      data: {
+        userId,
+        subscriptionTypeId: newSubscriptionTypeId,
+        remainingEntries: newSubscription.entries,
+        remainingExits: newSubscription.exits,
+        startDate: new Date(),
+        isActive: true,
+      },
+    });
+  }
+  
+  
+  
 }
