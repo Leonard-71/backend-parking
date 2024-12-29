@@ -116,19 +116,17 @@ export class UserSubscriptionsService {
           Subscription: true,
         },
         orderBy: {
-          createdAt: 'desc',  
+          createdAt: 'desc',
         },
       });
   
-      if (!subscriptions || subscriptions.length === 0) {
-        throw new NotFoundException(
-          `No subscriptions found for user with ID "${userId}".`,
-        );
+      if (!subscriptions || subscriptions.length === 0) { 
+        return null;
       }
   
       return subscriptions.map(subscription => ({
         id: subscription.id,
-        userId: subscription.userId,   
+        userId: subscription.userId,
         subscriptionTypeId: subscription.subscriptionTypeId,
         remainingEntries: subscription.remainingEntries,
         remainingExits: subscription.remainingExits,
@@ -150,6 +148,7 @@ export class UserSubscriptionsService {
       );
     }
   }
+  
   
   async findBySubscriptionTypeId(subscriptionTypeId: UUID) {
     try {
