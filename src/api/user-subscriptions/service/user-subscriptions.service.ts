@@ -303,7 +303,62 @@ export class UserSubscriptionsService {
     return adjustedPrice;
 }
 
-  
-  
-  
+async findActiveSubscription(userId: UUID) {
+  try {
+    const activeSubscription = await this.prisma.userSubscription.findFirst({
+      where: { userId, isActive: true },
+      include: { Subscription: true },  
+    });
+
+    if (!activeSubscription) {
+      throw new NotFoundException("No active subscription found for this user.");
+    }
+
+    return {
+      id: activeSubscription.id,
+      userId: activeSubscription.userId,
+      subscriptionTypeId: activeSubscription.subscriptionTypeId,
+      remainingEntries: activeSubscription.remainingEntries,
+      remainingExits: activeSubscription.remainingExits,
+      pricePaid: activeSubscription.pricePaid,
+      startDate: activeSubscription.startDate,
+      endDate: activeSubscription.endDate,
+      isActive: activeSubscription.isActive,
+      subscription: {
+        name: activeSubscription.Subscription?.name || null,
+        price: activeSubscription.Subscription?.price || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving active subscription:", error);
+    throw new BadRequestException("Could not retrieve active subscription.");
+  }
+}
+
+async decrementRemainingEntries(userId: UUID): Promise<any> {
+  try {
+      const activeSubscription = await this.prisma.userSubscription.findFirst({
+          where: { userId, isActive: true },
+      });
+
+      if (!activeSubscription) {
+          throw new NotFoundException("No active subscription found for this user.");
+      }
+
+      if (activeSubscription.remainingEntries <= 0) {
+          throw new BadRequestException("No remaining entries available.");
+      }
+
+      return await this.prisma.userSubscription.update({
+          where: { id: activeSubscription.id },
+          data: {
+              remainingEntries: activeSubscription.remainingEntries - 1,
+          },
+      });
+  } catch (error) {
+      console.error("Error decrementing remaining entries:", error);
+      throw error;
+  }
+}
+
 }

@@ -22,7 +22,6 @@ export class CarService {
     };
 }
 
-
   async findAll() {
     return this.prisma.car.findMany();
   }

@@ -89,6 +89,16 @@ async calculatePrice(
     return { adjustedPrice };
 }
 
+@Get("/active/:userId")
+findActiveSubscription(@Param("userId") userId: UUID) {
+  return this.userSubscriptionsService.findActiveSubscription(userId);
+}
+
+@Patch("/decrement/:userId")
+decrementRemainingEntries(@Param("userId") userId: UUID) {
+    return this.userSubscriptionsService.decrementRemainingEntries(userId);
+}
+
 
   @Delete(":id")
   remove(@Param("id") id: UUID) {
