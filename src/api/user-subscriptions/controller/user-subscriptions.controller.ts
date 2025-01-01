@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  BadRequestException,
+  Query,
 } from "@nestjs/common";
 import { UserSubscriptionsService } from "../service/user-subscriptions.service";
 import { CreateUserSubscriptionDto } from "../dto/create-user-subscription.dto";
@@ -95,9 +97,17 @@ findActiveSubscription(@Param("userId") userId: UUID) {
 }
 
 @Patch("/decrement/:userId")
-decrementRemainingEntries(@Param("userId") userId: UUID) {
-    return this.userSubscriptionsService.decrementRemainingEntries(userId);
+decrementRemainingEntries(
+    @Param("userId") userId: UUID,
+    @Query("field") field: "remainingEntries" | "remainingExits"
+) {
+    if (!field) {
+        throw new BadRequestException("Field parameter is required.");
+    }
+
+    return this.userSubscriptionsService.decrementRemainingField(userId, field);
 }
+
 
 
   @Delete(":id")

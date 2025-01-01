@@ -292,16 +292,23 @@ export class UserSubscriptionsService {
 
     let adjustedPrice = new Decimal(newSubscriptionType.price);
 
-    if (activeSubscription) {
-        const remainingValue = new Decimal(activeSubscription.remainingEntries)
+    if (activeSubscription) { 
+        const remainingEntriesValue = new Decimal(activeSubscription.remainingEntries)
             .div(new Decimal(activeSubscription.Subscription.entries))
             .mul(new Decimal(activeSubscription.Subscription.price));
-
-        adjustedPrice = Decimal.max(new Decimal(newSubscriptionType.price).sub(remainingValue), new Decimal(0));
+ 
+        const remainingExitsValue = new Decimal(activeSubscription.remainingExits)
+            .div(new Decimal(activeSubscription.Subscription.exits))
+            .mul(new Decimal(activeSubscription.Subscription.price));
+ 
+        const totalRemainingValue = remainingEntriesValue.add(remainingExitsValue);
+ 
+        adjustedPrice = Decimal.max(new Decimal(newSubscriptionType.price).sub(totalRemainingValue), new Decimal(0));
     }
 
     return adjustedPrice;
 }
+
 
 async findActiveSubscription(userId: UUID) {
   try {
@@ -335,7 +342,7 @@ async findActiveSubscription(userId: UUID) {
   }
 }
 
-async decrementRemainingEntries(userId: UUID): Promise<any> {
+async decrementRemainingField(userId: UUID, field: 'remainingEntries' | 'remainingExits'): Promise<any> {
   try {
       const activeSubscription = await this.prisma.userSubscription.findFirst({
           where: { userId, isActive: true },
@@ -345,20 +352,33 @@ async decrementRemainingEntries(userId: UUID): Promise<any> {
           throw new NotFoundException("No active subscription found for this user.");
       }
 
-      if (activeSubscription.remainingEntries <= 0) {
-          throw new BadRequestException("No remaining entries available.");
+      if (activeSubscription[field] <= 0) {
+          throw new BadRequestException(`No remaining ${field === 'remainingEntries' ? 'entries' : 'exits'} available.`);
       }
-
-      return await this.prisma.userSubscription.update({
+ 
+      const updatedSubscription = await this.prisma.userSubscription.update({
           where: { id: activeSubscription.id },
           data: {
-              remainingEntries: activeSubscription.remainingEntries - 1,
+              [field]: activeSubscription[field] - 1,
           },
       });
+ 
+      if (updatedSubscription.remainingEntries === 0 && updatedSubscription.remainingExits === 0) {
+          return await this.prisma.userSubscription.update({
+              where: { id: activeSubscription.id },
+              data: {
+                  isActive: false,
+              },
+          });
+      }
+
+      return updatedSubscription;
   } catch (error) {
-      console.error("Error decrementing remaining entries:", error);
+      console.error(`Error decrementing ${field}:`, error);
       throw error;
   }
 }
+
+
 
 }
