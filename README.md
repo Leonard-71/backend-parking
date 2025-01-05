@@ -13,7 +13,7 @@
 - **Database Management**: pgAdmin
 - **Development Environment**: Visual Studio Code (VS Code)
 - **Database**: PostgreSQL
-- **Testing**: CRUD routes tested with PostgreSQL
+- **Testing**: CRUD routes tested with Postman
 
 ## Installation
 
